@@ -15,12 +15,12 @@ def rank(data,filters={},percentile=0.95):
 		data = data[data[cat_class] == cat_type]
 
 	m = data[data['vote_count'].notnull()]['vote_count'].astype('int').quantile(percentile)
-	C = data[data['vote_average'].notnull()]['vote_average'].astype('int').mean()
+	C = data[data['vote_average'].notnull()]['vote_average'].astype('float').mean()
 
 	
 
 	qual = data[(data['vote_count'] >= m) & (data['vote_count'].notnull()) & (data['vote_average'].notnull())][['title', 'year', 'vote_count', 'vote_average', 'popularity']]
-	qual['vote_count'], qual['vote_average'] = qual['vote_count'].astype('int'), qual['vote_average'].astype('int')
+	qual['vote_count'], qual['vote_average'] = qual['vote_count'].astype('int'), qual['vote_average'].astype('float')
 
 
 	qual['rating'] = qual.apply(lambda x: (x['vote_average']*x['vote_count'] + m*C)/(x['vote_count']+m), axis=1)
