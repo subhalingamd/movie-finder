@@ -3,9 +3,9 @@ import numpy as np
 # from scipy import stats
 
 
-def rank(data,filters={},percentile=0.95):
+def filter_data(data,filters):
 	"""
-	IMDb Ranking function as stated in https://en.wikipedia.org/wiki/IMDb#Rankings
+	Filter the given data based on constraints
 	"""
 	for cat_class,cat_type in filters.items():
 		if cat_class == 'genres':
@@ -13,6 +13,13 @@ def rank(data,filters={},percentile=0.95):
 			s.name = cat_class
 			data = data.drop(cat_class, axis=1).join(s)
 		data = data[data[cat_class] == cat_type]
+	return data
+
+def rank(data,filters={},percentile=0.95):
+	"""
+	IMDb Ranking function as stated in https://en.wikipedia.org/wiki/IMDb#Rankings
+	"""
+	data = filter_data(data,filters)
 
 	m = data[data['vote_count'].notnull()]['vote_count'].astype('int').quantile(percentile)
 	C = data[data['vote_average'].notnull()]['vote_average'].astype('float').mean()
