@@ -1,7 +1,7 @@
 import pandas as pd
-from ast import literal_eval
 import numpy as np
 # from unidecode import unidecode
+from ast import literal_eval
 
 def read_metadata(path='data/movies_metadata.csv'):  # metadata = md
 	return pd.read_csv(path)
@@ -17,8 +17,8 @@ def read_keywords(path='data/keywords.csv'):  # keywords = kw
 
 
 def preprocess_md(md):
+	md['year'] = pd.to_datetime(md['release_date'],errors='coerce').apply(lambda x: str(x).strip()[:4] if x != np.nan else np.nan)
 	md['genres'] = md['genres'].fillna('[]').apply(literal_eval).apply(lambda x: [el['name'] for el in x] if isinstance(x, list) else [])
-	md['year'] = pd.to_datetime(md['release_date'], errors='coerce').apply(lambda x: str(x).split('-')[0] if x != np.nan else np.nan)
 	# print(md['id'])
 	return md
 
@@ -67,4 +67,4 @@ def filter_keywords(x,s):
 def weighted_rating(x,m,C):
     	v = x['vote_count']
     	R = x['vote_average']
-    	return (v/(v+m) * R) + (m/(m+v) * C)
+    	return (v*R + m*C)/(v+m)
