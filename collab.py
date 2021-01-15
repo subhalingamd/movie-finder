@@ -16,7 +16,7 @@ def build_collabrative_model(userData,mode='svd'):
 	reader = Reader()
 	userData = Dataset.load_from_df(userData[['userId', 'movieId', 'rating']].astype('str'), reader)
 	
-	# trainset, testset = train_test_split(userData, test_size=0)
+	# trainset, testset = train_test_split(userData, test_size=0.1)
 	trainset = userData.build_full_trainset()
 
 	model = None
@@ -47,9 +47,6 @@ def build_collabrative_model(userData,mode='svd'):
 
 		model = SVD(verbose=True)
 
-		#predictions = model.test(testset)
-		# print(accuracy.rmse(predictions))
-
 	elif mode == "svd++":
 		from surprise import SVDpp
 
@@ -57,6 +54,12 @@ def build_collabrative_model(userData,mode='svd'):
 
 	
 	model.fit(trainset)
+
+	# predictions = model.test(testset)
+	# print(accuracy.rmse(predictions))
+	# predictions = model.test(trainset)
+	# print(accuracy.rmse(predictions))
+
 	return model
 
 
@@ -92,5 +95,5 @@ if __name__ == "__main__": # See analysis.ipynb for more
 	data2=pd.read_csv(config["metadata"])
 
 	# build_collabrative_model(data,mode='svd1')
-
-	print(collabrative(preprocess_md(data2),data,'120',filters={},mode='knn_baseline').head())
+	print(build_collabrative_model(data))
+	# print(collabrative(preprocess_md(data2),data,'120',filters={},mode='knn_baseline').head())
