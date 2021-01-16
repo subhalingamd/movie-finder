@@ -9,10 +9,10 @@ def hybrid(md,users,ls,title,userID,cr=None,kw=None,content_mode="metadata",coll
 		assert cr is not None and kw is not None, "cr/kw parameters required when content_mode='metadata'"
 
 	if content_mode=='metadata':
-		md = content_metadata(title,md,ls,cr,kw)
+		md = content_metadata(title,md,ls,cr,kw,filters=filters)
 	elif content_mode=='desc':
-		md = content_desc(title,md,ls)
+		md = content_desc(title,md,ls,filters=filters)
 
-	res = collabrative(md,users,userID,model=collabrative_model,filters=filters,mode=collabrative_mode)
+	res = collabrative(md,users,userID,model=collabrative_model,mode=collabrative_mode)
 
 	return res

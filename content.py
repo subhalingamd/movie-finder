@@ -7,46 +7,50 @@ from nltk.corpus import wordnet
 from nltk.stem import SnowballStemmer, WordNetLemmatizer
 
 from helper import *
-import warnings; warnings.simplefilter('ignore')
 
 #from unidecode import unidecode
 
 
-def content_desc(title,md,ls):
+def content_desc(title,md,ls,filters={}):
+	smd1 = md[md['id'].isin(ls)]
+	smd = filter_data(smd1,filters)
+	if not len(smd[smd['title']==title]):
+		print("Warning: Given title not in required filters! I'm proceeding with the query but the results might not be correct.")
+		smd = pd.concat([smd,smd1[smd1['title']==title]])
 	
-	smd = md[md['id'].isin(ls)]
-	smd['tagline'] = smd['tagline'].fillna('')
-	smd['description'] = (smd['overview'] + smd['tagline']).fillna('')
-	tfidf = TfidfVectorizer(analyzer='word', ngram_range=(1, 2), min_df=0, stop_words='english')
-	matrix = tfidf.fit_transform(smd['description'])
+	smd['desc'] = (smd['overview'].fillna('') + smd['tagline'].fillna('')).fillna('')
+	tfidf = TfidfVectorizer(analyzer='word', stop_words="english", ngram_range=(1, 2))
+	matrix = tfidf.fit_transform(smd['desc'])
 	cosine = linear_kernel(matrix, matrix)
 
 	smd = smd.reset_index()
 	indices = pd.Series(smd.index, index=smd['title'])
+	# print(smd.reindex(['title'],axis="columns")['title'])
 	idx = indices[title]
 
 	scores = list(enumerate(cosine[idx]))
 	scores = sorted(scores, key=lambda x: x[1], reverse=True)
-	scores = scores[:500]
+	scores = scores[1:501]
 	#print(scores)
 	movies = [i[0] for i in scores]
 	
 	return smd.iloc[movies]
 
 
-def content_metadata(title,md,ls,cr,kw):
+def content_metadata(title,md,ls,cr,kw,filters={}):
 	md = md.merge(cr, on='id').merge(kw, on='id')
-	smd = md[md['id'].isin(ls)]
-	smd['cast'] = smd['cast'].apply(literal_eval)
+	smd1 = md[md['id'].isin(ls)]
+	smd = filter_data(smd1,filters)
+	if not len(smd[smd['title']==title]):
+		print("Warning: Given title not in required filters! I'm proceeding with the query but the results might not be correct.")
+		smd = pd.concat([smd,smd1[smd1['title']==title]])
+
+	smd['cast'] = smd['cast'].apply(literal_eval).apply(lambda x: [i['name'] for i in x] if isinstance(x, list) else []).apply(lambda x: x[:3] if len(x) >=3 else x).apply(lambda x: [str.lower(i.replace(" ", "")) for i in x])
 	smd['cast_size'] = smd['cast'].apply(lambda x: len(x))
 	smd['crew'] = smd['crew'].apply(literal_eval)
 	smd['crew_size'] = smd['crew'].apply(lambda x: len(x))
-	smd['keywords'] = smd['keywords'].apply(literal_eval)
-	smd['director'] = smd['crew'].apply(get_director)
-
-	smd['cast'] = smd['cast'].apply(lambda x: [i['name'] for i in x] if isinstance(x, list) else []).apply(lambda x: x[:3] if len(x) >=3 else x).apply(lambda x: [str.lower(i.replace(" ", "")) for i in x])
-	smd['keywords'] = smd['keywords'].apply(lambda x: [i['name'] for i in x] if isinstance(x, list) else [])
-	smd['director'] = smd['director'].astype('str').apply(lambda x: str.lower(x.replace(" ", ""))).apply(lambda x: [x,x,x])
+	smd['director'] = smd['crew'].apply(get_director).astype('str').apply(lambda x: str.lower(x.replace(" ", ""))).apply(lambda x: [x,x,x])
+	smd['keywords'] = smd['keywords'].apply(literal_eval).apply(lambda x: [i['name'] for i in x] if isinstance(x, list) else [])
 	
 	s = smd.apply(lambda x: pd.Series(x['keywords']),axis=1).stack().reset_index(level=1, drop=True)
 	s.name = 'keyword'
@@ -55,10 +59,13 @@ def content_metadata(title,md,ls,cr,kw):
 
 	stemmer = SnowballStemmer('english')
 	smd['keywords'] = smd['keywords'].apply(lambda x: filter_keywords(x,s)).apply(lambda x: [stemmer.stem(i) for i in x]).apply(lambda x: [str.lower(i.replace(" ", "")) for i in x])
-	smd['soup'] = (smd['keywords'] + smd['cast'] + smd['director'] + smd['genres']).apply(lambda x: ' '.join(x))
+	if "genres" in filters.keys():
+		smd['dump'] = (smd['keywords'] + smd['cast'] + smd['director']).apply(lambda x: ' '.join(x))
+	else:
+		smd['dump'] = (smd['keywords'] + smd['cast'] + smd['director'] + smd['genres']).apply(lambda x: ' '.join(x))
 
-	count = CountVectorizer(analyzer='word', ngram_range=(1, 2), min_df=0, stop_words='english')
-	matrix = count.fit_transform(smd['soup'])
+	count = CountVectorizer(analyzer='word', stop_words="english", ngram_range=(1, 2))
+	matrix = count.fit_transform(smd['dump'])
 	cosine = cosine_similarity(matrix, matrix)
 	smd = smd.reset_index()
 	indices = pd.Series(smd.index, index=smd['title'])
@@ -66,7 +73,7 @@ def content_metadata(title,md,ls,cr,kw):
 	idx = indices[title]
 	scores = list(enumerate(cosine[idx]))
 	scores = sorted(scores, key=lambda x: x[1], reverse=True)
-	scores = scores[:500]
+	scores = scores[1:501]
 	#print(scores)
 	movies = [i[0] for i in scores]
 	
@@ -74,10 +81,9 @@ def content_metadata(title,md,ls,cr,kw):
 	vote_counts = movies[movies['vote_count'].notnull()]['vote_count'].astype('int').quantile(0.5)
 	vote_averages = movies[movies['vote_average'].notnull()]['vote_average'].astype('float').mean()
 	movies = movies[(movies['vote_count'].notnull()) & (movies['vote_average'].notnull()) & (movies['vote_count'] >= vote_counts)]
-	movies['vote_count'] = movies['vote_count'].astype('int')
-	movies['vote_average'] = movies['vote_average'].astype('float')
-	movies['weighted_rating'] = movies.apply(lambda x: weighted_rating(x,vote_counts,vote_averages), axis=1)
-	movies = movies.sort_values('weighted_rating', ascending=False)
+	movies['vote_count'], movies['vote_average'] = movies['vote_count'].astype('int'), movies['vote_average'].astype('float')
+	movies['rating'] = movies.apply(lambda x: weighted_rating(x,vote_counts,vote_averages), axis=1)
+	movies = movies.sort_values('rating', ascending=False)
 	
 	#print(movies.columns)
 	return movies

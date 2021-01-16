@@ -68,3 +68,4 @@ def weighted_rating(x,m,C):
     	v = x['vote_count']
     	R = x['vote_average']
     	return (v*R + m*C)/(v+m)
+

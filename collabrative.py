@@ -60,12 +60,10 @@ def collabrative(moviesData,userData,userID,model=None,filters={},mode='svd'):
 	userData = userData[userData['userId']==userID]
 	data = moviesData[~(moviesData['id'].isin(userData['movieId']))]
 	data['estRating'] = data.apply(lambda x: model.predict(userID,x['id']).est, axis=1)
-	
-
 	#data = data.apply(lambda x: float(x['estRating'].split(',')[3]) if not None else -1)
 	data = data.sort_values('estRating', ascending=False)
 
-	return data[['id','title','estRating']+list(filters.keys())]
+	return data[['id','title'] +list(filters.keys())+ ['estRating']]
 
 
 if __name__ == "__main__": # See analysis.ipynb for more
@@ -80,6 +78,6 @@ if __name__ == "__main__": # See analysis.ipynb for more
 	data = pd.read_csv(config["ratings"])
 	data2=pd.read_csv(config["metadata"])
 
-	# build_collabrative_model(data,mode='svd1')
+	# build_collabrative_model(data,mode='svd1') ##assert_test
 
 	print(collabrative(preprocess_md(data2),data,'120',filters={"genres":"Action","original_language":"ta"}).head())

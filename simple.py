@@ -3,7 +3,7 @@ import numpy as np
 
 from helper import filter_data
 
-def simple_recommender(data,filters={},percentile=0.95):
+def simple_recommender(data,filters={},percentile=0.925):
 	"""
 	IMDb Ranking function as stated in https://en.wikipedia.org/wiki/IMDb#Rankings
 	"""
@@ -13,16 +13,14 @@ def simple_recommender(data,filters={},percentile=0.95):
 	C = data[data['vote_average'].notnull()]['vote_average'].astype('float').mean()
 
 	
+	res = data[(data['vote_count'].notnull()) & (data['vote_average'].notnull()) & (data['vote_count'] >= m)][['id', 'title'] +list(filters.keys())+ ['vote_count', 'vote_average', 'popularity']]
+	res['vote_count'], res['vote_average'] = res['vote_count'].astype('int'), res['vote_average'].astype('float')
 
-	qual = data[(data['vote_count'] >= m) & (data['vote_count'].notnull()) & (data['vote_average'].notnull())][['title', 'year', 'vote_count', 'vote_average', 'popularity']]
-	qual['vote_count'], qual['vote_average'] = qual['vote_count'].astype('int'), qual['vote_average'].astype('float')
-
-
-	qual['rating'] = qual.apply(lambda x: (x['vote_average']*x['vote_count'] + m*C)/(x['vote_count']+m), axis=1)
-	qual = qual.sort_values('rating', ascending=False)
+	res['rating'] = res.apply(lambda x: (x['vote_average']*x['vote_count'] + m*C)/(x['vote_count']+m), axis=1)
+	res = res.sort_values('rating', ascending=False)
 	
 	#return (R*v + C*m)/(v+m)
-	return qual
+	return res
 
 
 if __name__ == "__main__": # See analysis.ipynb for more
