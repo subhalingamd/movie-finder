@@ -3,7 +3,7 @@ import pandas as pd
 from helper import filter_data
 
 def build_collabrative_model(userData,mode='svd'):
-	mode_opts = ['knn','knn_baseline','knn_with_means','svd','svd++']
+	mode_opts = ['knn','knn_with_means','svd','svd++']
 	assert mode in mode_opts, "Invalid mode. Choose from "+str(mode_opts)
 
 	from surprise import Reader, Dataset
@@ -21,10 +21,6 @@ def build_collabrative_model(userData,mode='svd'):
 	if mode == "knn":
 		from surprise import KNNBasic
 		model = KNNBasic(verbose=True)
-
-	elif mode == "knn_baseline":
-		from surprise import KNNBaseline
-		model = KNNBaseline(verbose=True)
 
 	elif mode=='knn_with_means':
 		from surprise import KNNWithMeans
