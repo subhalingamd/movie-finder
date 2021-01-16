@@ -13,6 +13,10 @@ from helper import *
 
 def content_desc(title,md,ls,filters={}):
 	smd1 = md[md['id'].isin(ls)]
+	if not len(smd1[smd1['title']==title]):
+		print("Error: I haven't seen this movie title in my collection before. Can't proceed.")
+		return
+
 	smd = filter_data(smd1,filters)
 	if not len(smd[smd['title']==title]):
 		print("Warning: Given title not in required filters! I'm proceeding with the query but the results might not be correct.")
@@ -40,6 +44,11 @@ def content_desc(title,md,ls,filters={}):
 def content_metadata(title,md,ls,cr,kw,filters={}):
 	md = md.merge(cr, on='id').merge(kw, on='id')
 	smd1 = md[md['id'].isin(ls)]
+
+	if not len(smd1[smd1['title']==title]):
+		print("Error: I haven't seen this movie title in my collection before. Can't proceed.")
+		return
+
 	smd = filter_data(smd1,filters)
 	if not len(smd[smd['title']==title]):
 		print("Warning: Given title not in required filters! I'm proceeding with the query but the results might not be correct.")
@@ -98,5 +107,5 @@ if __name__ == "__main__": # See analysis.ipynb for more
 	kw = preprocess_kw(read_keywords())
 
 
-	#print(content_desc('The Hangover Part III',md,ls))
+	print(content_desc('The Hangover Part III',md,ls))
 	print(content_metadata('The Hangover Part III',md,ls,cr,kw))
