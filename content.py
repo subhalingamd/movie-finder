@@ -69,12 +69,12 @@ def content_metadata(title,md,ls,cr,kw,filters={}):
 	stemmer = SnowballStemmer('english')
 	smd['keywords'] = smd['keywords'].apply(lambda x: filter_keywords(x,s)).apply(lambda x: [stemmer.stem(i) for i in x]).apply(lambda x: [str.lower(i.replace(" ", "")) for i in x])
 	if "genres" in filters.keys():
-		smd['dump'] = (smd['keywords'] + smd['cast'] + smd['director']).apply(lambda x: ' '.join(x))
+		smd['soup'] = (smd['keywords'] + smd['cast'] + smd['director']).apply(lambda x: ' '.join(x))
 	else:
-		smd['dump'] = (smd['keywords'] + smd['cast'] + smd['director'] + smd['genres']).apply(lambda x: ' '.join(x))
+		smd['soup'] = (smd['keywords'] + smd['cast'] + smd['director'] + smd['genres']).apply(lambda x: ' '.join(x))
 
 	count = CountVectorizer(analyzer='word', stop_words="english", ngram_range=(1, 2))
-	matrix = count.fit_transform(smd['dump'])
+	matrix = count.fit_transform(smd['soup'])
 	cosine = cosine_similarity(matrix, matrix)
 	smd = smd.reset_index()
 	indices = pd.Series(smd.index, index=smd['title'])
