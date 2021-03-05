@@ -103,7 +103,7 @@ if __name__ == "__main__": # See analysis.ipynb for more
 
 	md = preprocess_md(read_metadata())
 	ls = preprocess_ls(read_links_small())
-	cr = preprocess_cr(read_credits(path="/Users/Subhalingam/Downloads/credits.csv"))
+	cr = preprocess_cr(read_credits())
 	kw = preprocess_kw(read_keywords())
 
 
