@@ -1,0 +1,38 @@
+
+One of the reasons for obtaining high RMSE/MAE values is because the actual user ratings (in the dataset) are in the steps of 0.5 (0.5, 1, 1.5, ...) but the estimated rating is any floating point number. Koren and Sill have discussed this problem in [1] and have defined another metric called Fraction of Concordant Pairs (FCP) which is a more ranking-oriented metric (and can give better insights than RMSE/MAE).
+
+The authors have also tabulated their experimental results on some other dataset and have got FCP of about 72.5% on the test set with a SVD++ model. Moreover, their RMSE is about 2.4.
+
+The performance of our model and the parameter settings are as follows:
+
+
+--------------------------------
+PERFORMANCE METRICS
+--------------------------------
+
+PARAMETERS
+------------
+
+test_split: 0.15
+
+n_factors: 150  [The number of factors]
+n_epochs:  100  [The number of iterations in optimization]
+reg_all:   0.1  [The regularization term for all parameters]
+
+
+TEST SET
+-------------
+FCP:  0.6737
+RMSE: 0.8678
+MAE:  0.6671
+
+TRAIN SET
+-------------
+FCP:  0.8965
+RMSE: 0.5522
+MAE:  0.4266
+
+
+---
+
+[1] Yehuda Koren and Joseph Sill. 2013. Collaborative filtering on ordinal user feedback. In Proceedings of the Twenty-Third international joint conference on Artificial Intelligence (IJCAI '13). AAAI Press, 3022–3026.

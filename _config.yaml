@@ -1,0 +1,5 @@
+keywords: "data/keywords.csv"
+links: "data/links.csv"
+metadata: "data/movies_metadata.csv"  # "movies_metadata_small.csv"
+ratings: "data/ratings.csv"
+credits: "data/credits.csv"
